@@ -1,0 +1,9 @@
+azure-functions
+azure-identity
+azure-keyvault-certificates
+azure-keyvault-secrets
+azure-mgmt-dns
+acme
+josepy
+cffi
+cryptography
