@@ -5,7 +5,7 @@ and renews any that are within the threshold or missing.
 
 Required environment variables (set as Application Settings on the Function App):
   KEY_VAULT_NAME          - e.g. cert-mgmt-kv-abc123
-  CERTIFICATES_CONFIG     - JSON array: [{"name": "az-yourdomain-com", "domain_names": ["yourdomain.com","*.yourdomain.com"]}]
+  CERTIFICATES_CONFIG     - JSON array: [{"name": "yourdomain-com", "domain_names": ["yourdomain.com","*.yourdomain.com"]}]
   DNS_ZONE_NAME           - e.g. yourdomain.com
   DNS_ZONE_RESOURCE_GROUP - e.g. rg-hub-dns
   SUBSCRIPTION_ID         - Azure subscription ID
@@ -167,7 +167,7 @@ def _do_renewal(
         cert_client.purge_deleted_certificate(cert_name)
         logger.info("Purged soft-deleted certificate '%s'", cert_name)
     except Exception:
-        pass  # Not in deleted state — proceed normally
+        pass
 
     cert_client.import_certificate(
         certificate_name=cert_name,
