@@ -4,7 +4,7 @@ Runs on a daily timer, loops over all configured certificates, checks expiry in 
 and renews any that are within the threshold or missing.
 
 Required environment variables (set as Application Settings on the Function App):
-  KEY_VAULT_NAME          - e.g. kv-cert-mgmt-abc123
+  KEY_VAULT_NAME          - e.g. cert-mgmt-kv-abc123
   CERTIFICATES_CONFIG     - JSON array: [{"name": "az-yourdomain-com", "domain_names": ["yourdomain.com","*.yourdomain.com"]}]
   DNS_ZONE_NAME           - e.g. yourdomain.com
   DNS_ZONE_RESOURCE_GROUP - e.g. rg-hub-dns
@@ -44,7 +44,11 @@ from cryptography.hazmat.primitives.serialization import NoEncryption
 
 logger = logging.getLogger(__name__)
 
-# ── Configuration — read at module load, ───────────────────────────────────────
+
+# ============================================================================
+# Configuration — read at module load
+# ============================================================================
+
 try:
     KEY_VAULT_NAME         = os.environ["KEY_VAULT_NAME"]
     CERTIFICATES_CONFIG    = json.loads(os.environ["CERTIFICATES_CONFIG"])
@@ -60,7 +64,9 @@ except KeyError as e:
     raise
 
 
-# ── Entry point ────────────────────────────────────────────────────────────────
+# ============================================================================
+# Entry Point
+# ============================================================================
 
 app = func.FunctionApp()
 
@@ -113,7 +119,9 @@ def main(mytimer: func.TimerRequest) -> None:
         raise
 
 
-# ── Expiry check ───────────────────────────────────────────────────────────────
+# ============================================================================
+# Expiry check
+# ============================================================================
 
 def _get_days_until_expiry(cert_client: CertificateClient, cert_name: str) -> int:
     try:
@@ -127,7 +135,9 @@ def _get_days_until_expiry(cert_client: CertificateClient, cert_name: str) -> in
         return -1
 
 
-# ── Full renewal flow ──────────────────────────────────────────────────────────
+# ============================================================================
+# Full renewal flow
+# ============================================================================
 
 def _do_renewal(
     acme_client,
@@ -167,7 +177,9 @@ def _do_renewal(
     logger.info("Certificate '%s' stored in Key Vault", cert_name)
 
 
-# ── ACME helpers ───────────────────────────────────────────────────────────────
+# ============================================================================
+# ACME helpers
+# ============================================================================
 
 def _generate_rsa_key(bits: int):
     return rsa.generate_private_key(
@@ -208,7 +220,9 @@ def _generate_csr(private_key, domains: list) -> bytes:
     return csr.public_bytes(serialization.Encoding.PEM)
 
 
-# ── DNS-01 challenge ───────────────────────────────────────────────────────────
+# ============================================================================
+# DNS-01 challenge
+# ============================================================================
 
 def _complete_dns_challenges(
     acme_client: acme.client.ClientV2,
@@ -283,7 +297,9 @@ def _get_dns_challenge(auth):
     raise ValueError(f"No DNS-01 challenge found for {auth.body.identifier.value}")
 
 
-# ── PKCS#12 bundling ───────────────────────────────────────────────────────────
+# ============================================================================
+# PKCS#12 bundling
+# ============================================================================
 
 def _bundle_pkcs12(private_key, cert_chain_pem: str) -> bytes:
     pem_parts = cert_chain_pem.encode().split(b"-----END CERTIFICATE-----")
@@ -305,7 +321,9 @@ def _bundle_pkcs12(private_key, cert_chain_pem: str) -> bytes:
     )
 
 
-# ── Alerting ───────────────────────────────────────────────────────────────────
+# ============================================================================
+# Alerting
+# ============================================================================
 
 def send_alert(message: str) -> None:
     logger.warning("ALERT: %s", message)
